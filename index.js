@@ -1,8 +1,9 @@
-const nodemailer = require('nodemailer');
+
 const express = require('express');
 const app= express();
 const {verify} = require('jsonwebtoken');
-const {generateCode} = require('./src/generateCode')
+const {generateCode} = require('./src/generateCode');
+const {sendMail} = require('./src/sendEmail');
 require('dotenv').config()
 
 app.post("/validation",async (req,res)=>{
@@ -10,23 +11,22 @@ app.post("/validation",async (req,res)=>{
     const userID =req.get('userID')
     const userEmail= req.get('userEmail');
    try {
-       console.log(userID);
-
        // generate code here
+       var code = generateCode();
+       var token = verify(userToken, process.env.mail_jwt_secret_key);
+       if(token.id == userID){
+           var result = await sendMail(userEmail, userID, code);
+           if (result == true) {
+               res.send("Email sent ! Check your inbox");
+           }
+           else res.send("Try again")
+       }
+       else res.send("Wrong credenital...")
 
-        var code = generateCode();
-
-       //const checkUser = verify(userToken, process.env.secret_key, { algorithms: 'HS512' })
-       res.send(code);
    } catch (error) {
     console.log(error);
        res.send(error);
-    
    }
-
-    
-    
-    //res.json(userEmail)
 });
 app.get('/verify',async(req,res)=>{
     const confirmCode = req.get('confirmCode');
