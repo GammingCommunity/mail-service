@@ -4,6 +4,9 @@
   "main": "index.js",
   "author": "Mattstacey",
   "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "device": "^0.3.10",
     "dotenv": "^8.2.0",
