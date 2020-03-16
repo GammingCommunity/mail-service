@@ -2,6 +2,7 @@ require('dotenv').config();
 const nodemailer = require('nodemailer');
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
+const {sign} = require('jsonwebtoken')
 module.exports = {
     sendMail: async (emailAddress, userID, code) => {
         var info = "";
@@ -36,18 +37,22 @@ module.exports = {
                     pass: 'hoanglee1998'
                 }
             })
-            
+            var payload= {
+                "userID":userID,
+                "confirmCode":code
+            }   
+            var token = sign(payload, process.env.mail_jwt_secret_key);
 
             info = await transporter.sendMail({
                 from: '"Gamming Community" <noreply@gmail.com>', // sender address
                 to: emailAddress, // list of receivers
                 subject: "Verify your email address", // Tieu de email
                 text: "Validation Code", // plain text body
-                html: `<b>Hey ${userID}</b>
+                html: `<b>Hey ${userID}. Wellcome to our community.</b>
                         <br/>
                         <b>Your code is ${code}</b>
-                
-                ` // html body
+                        <b>It expires in 10 minutes.</b>
+                        <p>Or Click <a href="http://localhost:3000/verify?token=${token}">here</a> to verify your email</p>` // html body
             });
 
             return true;
