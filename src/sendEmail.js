@@ -3,6 +3,7 @@ const nodemailer = require('nodemailer');
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
 const {sign} = require('jsonwebtoken')
+var Email = require('email-templates');
 module.exports = {
     sendMail: async (emailAddress, userID, code) => {
         var info = "";
@@ -30,11 +31,12 @@ module.exports = {
                     accessToken: process.env.accessToken
                 }
             })*/
+            
             var transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
                     user: process.env.email,
-                    pass: 'hoanglee1998'
+                    pass: process.env.password
                 }
             })
             var payload= {
@@ -42,7 +44,7 @@ module.exports = {
                 "confirmCode":code
             }   
             var token = sign(payload, process.env.mail_jwt_secret_key);
-
+            info1 = transporter.
             info = await transporter.sendMail({
                 from: '"Gamming Community" <noreply@gmail.com>', // sender address
                 to: emailAddress, // list of receivers

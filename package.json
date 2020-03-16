@@ -10,6 +10,7 @@
   "dependencies": {
     "device": "^0.3.10",
     "dotenv": "^8.2.0",
+    "email-templates": "^7.0.4",
     "express": "^4.17.1",
     "express-device": "^0.4.2",
     "googleapis": "^48.0.0",
