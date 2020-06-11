@@ -7,60 +7,33 @@ const { sendMail } = require('./src/sendEmail');
 var device = require('express-device');
 const isCodeUsable = require('./middleware/isCodeUsable');
 const checkConfirmCode = require('./middleware/checkConfirmCode');
+const checkSession = require('./middleware/checkSession');
 const verifyCode = require('./src/schema/codeValidation');
+const getUserID = require('./src/util/getUserID');
 require('dotenv').config()
 app.use(device.capture());
 
-// only need userEmail header
-app.post('/validation/no-id', async (req, res) => {
-    const userEmail = req.get('userEmail');
-    try {
-        // generate code for userID
-        var code = await generateCode(userID);
-      
-        if (token.id == userID) {
-            var result = await sendMail(userEmail, userID, code);
-            if (result == true) {
-                return res.json({
-                    code: true,
-                    message: "Email sent ! Check your inbox"
-                });
-            }
-            else res.send("Try again")
-        }
-        else res.send("Wrong credenital...")
-
-    } catch (error) {
-        console.log(error);
-        res.send(error);
-    }
-})
-
-
+app.use(checkSession());
 // both request code,and send again if code not usable
 // validate for already create account
 app.post("/validation", isCodeUsable, async (req, res) => {
-    const userToken = req.get('token');
-    const userID = req.get('userID')
-    const userEmail = req.get('userEmail');
+    const userToken = req.headers.token;
+    const userID = getUserID(res.info)
+    const userEmail = req.get('email');
 
     try {
         // generate code for userID
         var code = await generateCode(userID);
         // check token 
-        var token = verify(userToken, process.env.mail_jwt_secret_key);
-
-        if (token.id == userID) {
-            var result = await sendMail(userEmail, userID, code);
-            if (result == true) {
-                return res.json({
-                    code: true,
-                    message: "Email sent ! Check your inbox"
-                });
-            }
-            else res.send("Try again")
+        var result = await sendMail(userEmail, userID, code);
+        if (result == true) {
+            return res.json({
+                code: true,
+                message: "Email sent ! Check your inbox"
+            });
         }
-        else res.send("Wrong credenital...")
+        else res.send("Try again")
+        
 
     } catch (error) {
         console.log(error);
@@ -68,8 +41,8 @@ app.post("/validation", isCodeUsable, async (req, res) => {
     }
 });
 app.post('/resend', async (req, res) => {
-    const userID = req.get('userID');
-    const userEmail = req.get('userEmail');
+    const userID = getUserID(res.info)
+    const userEmail = req.get('email');
     
     var result = await verifyCode.deleteOne({ "requestID": userID });
     if (result.ok) {
@@ -88,12 +61,12 @@ app.post('/resend', async (req, res) => {
 //verify with link 
 
 app.post('/verify', async (req, res) => {
-
+    const userID = getUserID(res.info)
     try {
-        const checkToken = verify(req.query.token, process.env.mail_jwt_secret_key);
+       // const checkToken = verify(req.query.token, process.env.mail_jwt_secret_key);
 
         // code is expire
-        const isValidate = await checkConfirmCode(checkToken.userID, checkToken.confirmCode)
+        const isValidate = await checkConfirmCode(userID, checkToken.confirmCode)
         if (isValidate) {
             res.send("Your email has bean verified. You can login with your email or username")
         }
