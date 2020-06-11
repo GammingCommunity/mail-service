@@ -11,7 +11,34 @@ const verifyCode = require('./src/schema/codeValidation');
 require('dotenv').config()
 app.use(device.capture());
 
+// only need userEmail header
+app.post('/validation/no-id', async (req, res) => {
+    const userEmail = req.get('userEmail');
+    try {
+        // generate code for userID
+        var code = await generateCode(userID);
+      
+        if (token.id == userID) {
+            var result = await sendMail(userEmail, userID, code);
+            if (result == true) {
+                return res.json({
+                    code: true,
+                    message: "Email sent ! Check your inbox"
+                });
+            }
+            else res.send("Try again")
+        }
+        else res.send("Wrong credenital...")
+
+    } catch (error) {
+        console.log(error);
+        res.send(error);
+    }
+})
+
+
 // both request code,and send again if code not usable
+// validate for already create account
 app.post("/validation", isCodeUsable, async (req, res) => {
     const userToken = req.get('token');
     const userID = req.get('userID')
